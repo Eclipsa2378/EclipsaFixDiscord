@@ -45,6 +45,7 @@ if not exist "%APPDATA%\FixDiscordEclipsa\first_run.txt" (
 :: P.S. Обход работает так же с YouTube
 cd /d "%~dp0"
 set BIN=%~dp0bin\
+set LISTS=%~dp0lists\
 set CONNECTION_CHECK_INTERVAL=60
 set MAX_RECONNECT_ATTEMPTS=3
 set RUNNING=0
@@ -81,7 +82,7 @@ if not exist "%BIN%winws.exe" (
     exit /b 1
 )
 
-if not exist "lists\list-general.txt" (
+if not exist "%LISTS%list-general.txt" (
     cls
     echo ===================================
     echo  Discord обход от Eclipsa v1.0
@@ -218,13 +219,13 @@ if "%choice%"=="1" (
     echo [*] Запускаю обход Discord...
     taskkill /f /im winws.exe >nul 2>&1
     start "Discord от Eclipsa" /min "%BIN%winws.exe" --wf-tcp=80,443 --wf-udp=443,50000-50100 ^
-    --filter-udp=443 --hostlist=list-general.txt --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fake-quic="%BIN%quic_initial_www_google_com.bin" --new ^
-    --filter-udp=50000-50100 --ipset=ipset-discord.txt --dpi-desync=fake --dpi-desync-any-protocol --dpi-desync-cutoff=d3 --dpi-desync-repeats=6 --new ^
-    --filter-tcp=80 --hostlist=list-general.txt --dpi-desync=fake,split2 --dpi-desync-autottl=2 --dpi-desync-fooling=md5sig --new ^
-    --filter-tcp=443 --hostlist=list-general.txt --dpi-desync=split2 --dpi-desync-split-seqovl=652 --dpi-desync-split-pos=2 --dpi-desync-split-seqovl-pattern="%BIN%tls_clienthello_www_google_com.bin" --new ^
-    --filter-udp=443 --ipset=ipset-cloudflare.txt --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fake-quic="%BIN%quic_initial_www_google_com.bin" --new ^
-    --filter-tcp=80 --ipset=ipset-cloudflare.txt --dpi-desync=fake,split2 --dpi-desync-autottl=2 --dpi-desync-fooling=md5sig --new ^
-    --filter-tcp=443 --ipset=ipset-cloudflare.txt --dpi-desync=split2 --dpi-desync-split-seqovl=652 --dpi-desync-split-pos=2 --dpi-desync-split-seqovl-pattern="%BIN%tls_clienthello_www_google_com.bin"
+    --filter-udp=443 --hostlist=%LISTS%list-general.txt --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fake-quic="%BIN%quic_initial_www_google_com.bin" --new ^
+    --filter-udp=50000-50100 --ipset=%LISTS%ipset-discord.txt --dpi-desync=fake --dpi-desync-any-protocol --dpi-desync-cutoff=d3 --dpi-desync-repeats=6 --new ^
+    --filter-tcp=80 --hostlist=%LISTS%list-general.txt --dpi-desync=fake,split2 --dpi-desync-autottl=2 --dpi-desync-fooling=md5sig --new ^
+    --filter-tcp=443 --hostlist=%LISTS%list-general.txt --dpi-desync=split2 --dpi-desync-split-seqovl=652 --dpi-desync-split-pos=2 --dpi-desync-split-seqovl-pattern="%BIN%tls_clienthello_www_google_com.bin" --new ^
+    --filter-udp=443 --ipset=%LISTS%ipset-cloudflare.txt --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fake-quic="%BIN%quic_initial_www_google_com.bin" --new ^
+    --filter-tcp=80 --ipset=%LISTS%ipset-cloudflare.txt --dpi-desync=fake,split2 --dpi-desync-autottl=2 --dpi-desync-fooling=md5sig --new ^
+    --filter-tcp=443 --ipset=%LISTS%ipset-cloudflare.txt --dpi-desync=split2 --dpi-desync-split-seqovl=652 --dpi-desync-split-pos=2 --dpi-desync-split-seqovl-pattern="%BIN%tls_clienthello_www_google_com.bin"
     echo [+] Обход успешно запущен!
     set RUNNING=1
     echo [*] Запускаю мониторинг соединения...
@@ -252,9 +253,13 @@ if "%choice%"=="1" (
     :: Сохраняем полный путь к файлам
     set "FULL_PATH=%~dp0"
     set "FULL_BIN_PATH=%~dp0bin"
+    set "FULL_LISTS_PATH=%~dp0lists"
     
-    :: Добавление в автозапуск с полными путями
-    reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" /v "DiscordBypassEclipsa" /t REG_SZ /d "\"%FULL_BIN_PATH%\winws.exe\" --wf-tcp=443 --wf-udp=443,50000-50100 --filter-udp=443 --hostlist=\"%FULL_PATH%lists\list-general.txt\" --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fake-quic=\"%FULL_BIN_PATH%\quic_initial_www_google_com.bin\"" /f
+    :: Удаляем старую запись (если есть)
+    reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" /v "DiscordBypassEclipsa" /f >nul 2>&1
+    
+    :: Добавление в автозапуск с полными путями и экранированием кавычек
+    reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" /v "DiscordBypassEclipsa" /t REG_SZ /d "cmd.exe /c start \"\" /min \"%FULL_BIN_PATH%\winws.exe\" --wf-tcp=443 --wf-udp=443,50000-50100 --filter-udp=443 --hostlist=\"%FULL_LISTS_PATH%\list-general.txt\" --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fake-quic=\"%FULL_BIN_PATH%\quic_initial_www_google_com.bin\"" /f
     
     if errorlevel 1 (
         echo [!] Ошибка при добавлении в автозапуск
@@ -277,9 +282,9 @@ if "%choice%"=="1" (
     echo [*] Запускаю быстрый обход Discord...
     taskkill /f /im winws.exe >nul 2>&1
     start "Discord быстрый обход" /min "%BIN%winws.exe" --wf-tcp=443 --wf-udp=443,50000-50100 ^
-    --filter-udp=443 --hostlist=list-general.txt --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fake-quic="%BIN%quic_initial_www_google_com.bin" --new ^
-    --filter-udp=50000-50100 --ipset=ipset-discord.txt --dpi-desync=fake --dpi-desync-any-protocol --dpi-desync-cutoff=d3 --dpi-desync-repeats=6 --new ^
-    --filter-tcp=443 --hostlist=list-general.txt --dpi-desync=split --dpi-desync-split-pos=1 --dpi-desync-autottl --dpi-desync-fooling=badseq --dpi-desync-repeats=8
+    --filter-udp=443 --hostlist=%LISTS%list-general.txt --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fake-quic="%BIN%quic_initial_www_google_com.bin" --new ^
+    --filter-udp=50000-50100 --ipset=%LISTS%ipset-discord.txt --dpi-desync=fake --dpi-desync-any-protocol --dpi-desync-cutoff=d3 --dpi-desync-repeats=6 --new ^
+    --filter-tcp=443 --hostlist=%LISTS%list-general.txt --dpi-desync=split --dpi-desync-split-pos=1 --dpi-desync-autottl --dpi-desync-fooling=badseq --dpi-desync-repeats=8
     echo [+] Обход запущен! Discord должен работать.
     echo:
     pause

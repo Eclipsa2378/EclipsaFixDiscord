@@ -11,10 +11,8 @@ discord.gifts
 discord.gg
 discord.media
 discord.new
-discord.store
 discord.status
-discord-activities.com
-discordactivities.com
+discord.store
 discordapp.com
 discordapp.net
 discordcdn.com
@@ -22,10 +20,12 @@ discordmerch.com
 discordpartygames.com
 discordsays.com
 discordsez.com
+discord-activities.com
+discordactivities.com
+stable.dl2.discordapp.net
 ggpht.com
 googlevideo.com
 jnn-pa.googleapis.com
-stable.dl2.discordapp.net
 wide-youtube.l.google.com
 youtube-nocookie.com
 youtube-ui.l.google.com
